@@ -8,5 +8,14 @@ type ErrConstructHtmlxNode struct {
 }
 
 func (e *ErrConstructHtmlxNode) Error() string {
-	return fmt.Sprintf("Error processing field '%s': %v", e.fieldName, e.err)
+	return fmt.Sprintf("Error constructing field '%s': %v", e.fieldName, e.err)
+}
+
+type ErrParseHtmlxNode struct {
+	fieldName string
+	err       error
+}
+
+func (e *ErrParseHtmlxNode) Error() string {
+	return fmt.Sprintf("Error parsing field '%s': %v", e.fieldName, e.err)
 }
