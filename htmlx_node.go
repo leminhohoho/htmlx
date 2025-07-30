@@ -170,6 +170,8 @@ func (n *HtmlxNode) parseFromSelf() error {
 	return nil
 }
 
+// Parse extract from HTMl content and parse onto struct.
+// Parse will return error if node is not constructed.
 func (n *HtmlxNode) Parse() error {
 	if !n.constructed {
 		return &ErrParseHtmlxNode{n.name, fmt.Errorf("Htmlx node is not constructed")}
