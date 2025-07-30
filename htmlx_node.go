@@ -13,20 +13,17 @@ import (
 )
 
 // Htmlx node represent a collection of HTML nodes which is binded to a struct field which receive the data.
-// Htmlx node using chainable j-query like syntax, which call the according method from [github.com/PuerkitoBio/goquery.Selection] under the hood.
-// Htmlx does not replace [github.com/PuerkitoBio/goquery.Selection], so it will only expose common methods like Find(), Remove(),...
-// To take full advantage of [github.com/PuerkitoBio/goquery], accessing [HtmlxNode.Selection]
-type HtmlxNode struct {
+type htmlxNode struct {
 	// contains filtered or unexported fields
 
 	mu sync.Mutex
 
-	Selection *goquery.Selection // Contain the HTML node to extract from
+	selection *goquery.Selection // Contain the HTML node to extract from
 	name      string
 	config    *Config
 	extractor Extractor
 	val       reflect.Value
-	children  []*HtmlxNode
+	children  []*htmlxNode
 
 	constructed bool
 }
@@ -46,13 +43,13 @@ func getExtractor(src string) (Extractor, error) {
 	return nil, fmt.Errorf("'%s' is not a valid src", src)
 }
 
-func (n *HtmlxNode) appendNode(node *HtmlxNode) {
+func (n *htmlxNode) appendNode(node *htmlxNode) {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.children = append(n.children, node)
 }
 
-func (n *HtmlxNode) registerNode(fieldVal reflect.Value, fieldInfo reflect.StructField) error {
+func (n *htmlxNode) registerNode(fieldVal reflect.Value, fieldInfo reflect.StructField) error {
 	selector := fieldInfo.Tag.Get("htmlx_sel")
 	if selector == "" {
 		return nil
@@ -65,15 +62,15 @@ func (n *HtmlxNode) registerNode(fieldVal reflect.Value, fieldInfo reflect.Struc
 		return err
 	}
 
-	node := HtmlxNode{
-		Selection: n.Selection.Find(selector),
+	node := htmlxNode{
+		selection: n.selection.Find(selector),
 		name:      fieldInfo.Name,
 		config:    n.config,
 		extractor: extractor,
 		val:       fieldVal,
 	}
 
-	if err := node.Construct(); err != nil {
+	if err := node.construct(); err != nil {
 		return err
 	}
 
@@ -82,9 +79,9 @@ func (n *HtmlxNode) registerNode(fieldVal reflect.Value, fieldInfo reflect.Struc
 	return nil
 }
 
-// Construct create a [HtmlxNode] tree from the current root node.
-// Construct can only be called once provided that it is successful, calls after that will return error.
-func (n *HtmlxNode) Construct() error {
+// construct create a [htmlxNode] tree from the current root node.
+// construct can only be called once provided that it is successful, calls after that will return error.
+func (n *htmlxNode) construct() error {
 	if n.constructed {
 		return fmt.Errorf("The node is already constructed")
 	}
@@ -120,12 +117,12 @@ func (n *HtmlxNode) Construct() error {
 	return nil
 }
 
-func (n *HtmlxNode) parseFromSelf() error {
+func (n *htmlxNode) parseFromSelf() error {
 	if n.extractor == nil {
 		return nil
 	}
 
-	rawVal, err := n.extractor(n.Selection)
+	rawVal, err := n.extractor(n.selection)
 	if err != nil {
 		return err
 	}
@@ -173,9 +170,9 @@ func (n *HtmlxNode) parseFromSelf() error {
 	return nil
 }
 
-// Parse extract from HTMl content and parse onto struct.
-// Parse will return error if node is not constructed.
-func (n *HtmlxNode) Parse() error {
+// parse extract from HTMl content and parse onto struct.
+// parse will return error if node is not constructed.
+func (n *htmlxNode) parse() error {
 	if !n.constructed {
 		return &ErrParseHtmlxNode{n.name, fmt.Errorf("Htmlx node is not constructed")}
 	}
@@ -191,9 +188,9 @@ func (n *HtmlxNode) Parse() error {
 	for _, child := range n.children {
 		if n.config.async {
 			wg.Add(1)
-			go func() { err = child.Parse(); wg.Done() }()
+			go func() { err = child.parse(); wg.Done() }()
 		} else {
-			err = child.Parse()
+			err = child.parse()
 		}
 		if err != nil {
 			return &ErrParseHtmlxNode{n.name, err}
