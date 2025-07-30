@@ -8,6 +8,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+// Document is a wrapper of [Selection]
 type Document struct {
 	// contains filtered or unexported fields
 
