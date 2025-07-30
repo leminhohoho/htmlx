@@ -1,6 +1,7 @@
 package htmlx
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -15,9 +16,10 @@ type Categories struct {
 }
 
 type TestStruct struct {
-	SiteName   string     `htmlx_sel:"#default > header > div > div > div > a"`
-	SiteUrl    string     `htmlx_sel:"#default > header > div > div > div > a"                  htmlx_src:"attr(href)"`
-	Categories Categories `htmlx_sel:"#default > div > div > div > aside > div.side_categories" htmlx_src:"_"`
+	SiteName        string     `htmlx_sel:"#default > header > div > div > div > a"`
+	NumberOfResults *int       `htmlx_sel:"#default > div > div > div > div > form > strong:nth-child(2)"`
+	SiteUrl         string     `htmlx_sel:"#default > header > div > div > div > a"                       htmlx_src:"attr(href)"`
+	Categories      Categories `htmlx_sel:"#default > div > div > div > aside > div.side_categories"      htmlx_src:"_"`
 }
 
 func TestHtmlxNode(t *testing.T) {
@@ -31,12 +33,14 @@ func TestHtmlxNode(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for range 10000 {
-		testStruct := &TestStruct{}
+	for range 100 {
+		num := 0
+
+		testStruct := &TestStruct{NumberOfResults: &num}
 
 		rootNode := &HtmlxNode{
 			Selection: doc.Selection,
-			val:       reflect.ValueOf(*testStruct),
+			val:       reflect.ValueOf(testStruct).Elem(),
 			config:    &Config{async: true},
 		}
 
@@ -44,6 +48,15 @@ func TestHtmlxNode(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		fmt.Printf("%+v\n", rootNode)
+		if err := rootNode.Parse(); err != nil {
+			t.Fatal(err)
+		}
+
+		jsonDat, err := json.MarshalIndent(*testStruct, "", "	")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fmt.Println(string(jsonDat))
 	}
 }

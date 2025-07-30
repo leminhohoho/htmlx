@@ -138,6 +138,13 @@ func (n *HtmlxNode) parseFromSelf() error {
 	}
 
 	switch n.val.Kind() {
+	case reflect.Ptr:
+		if n.val.IsNil() {
+			n.val.Set(reflect.New(n.val.Type().Elem()))
+		}
+
+		n.val = n.val.Elem()
+		return n.parseFromSelf()
 	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
 		num, err := strconv.Atoi(rawVal)
 		if err != nil {
