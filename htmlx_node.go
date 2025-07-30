@@ -130,11 +130,14 @@ func (n *HtmlxNode) parseFromSelf() error {
 		return err
 	}
 
-	if n.val.Type().Implements(reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()) {
-		marshaller, _ := n.val.Interface().(encoding.TextUnmarshaler)
+	ptr := reflect.New(n.val.Type())
+	if ptr.Type().Implements(reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()) {
+		marshaller, _ := ptr.Interface().(encoding.TextUnmarshaler)
 		if err := marshaller.UnmarshalText([]byte(rawVal)); err != nil {
 			return err
 		}
+
+		n.val.Set(reflect.ValueOf(marshaller).Elem())
 	}
 
 	switch n.val.Kind() {
