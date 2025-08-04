@@ -14,8 +14,6 @@ import (
 
 // Htmlx node represent a collection of HTML nodes which is binded to a struct field which receive the data.
 type htmlxNode struct {
-	// contains filtered or unexported fields
-
 	mu sync.Mutex
 
 	selection *goquery.Selection // Contain the HTML node to extract from
