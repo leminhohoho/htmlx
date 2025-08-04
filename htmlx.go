@@ -10,8 +10,6 @@ import (
 
 // Document is a wrapper of [Selection]
 type Document struct {
-	// contains filtered or unexported fields
-
 	*Selection
 }
 
@@ -31,7 +29,7 @@ func NewDocFromReader(r io.Reader, opts ...Option) (*Document, error) {
 		opt(&c)
 	}
 
-	return &Document{Selection: &Selection{Selection: doc.Selection, config: c}}, nil
+	return &Document{Selection: &Selection{Selection: doc.Selection, Config: c}}, nil
 }
 
 // NewDocFromString create an [io.Reader] from given string and call [NewDocFromReader] under the hood.
@@ -42,4 +40,14 @@ func NewDocFromString(str string, opts ...Option) (*Document, error) {
 // NewDocFromBytes create an [io.Reader] from given bytes and call [NewDocFromReader] under the hood.
 func NewDocFromBytes(b []byte, opts ...Option) (*Document, error) {
 	return NewDocFromReader(bytes.NewReader(b), opts...)
+}
+
+// NewDocFromSelection return a [Document] from a [github.com/PuerkitoBio/goquery.Selection].
+func NewDocFromSelection(s *goquery.Selection, opts ...Option) (*Document, error) {
+	c := Config{}
+	for _, opt := range opts {
+		opt(&c)
+	}
+
+	return &Document{Selection: &Selection{Selection: s, Config: c}}, nil
 }
